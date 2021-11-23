@@ -1,0 +1,11 @@
+Missing(Missing 50% discard, else replace), Inconsistent value(US, U.S.A, USA), Wrong Data, correlated variables
+
+csv read dataframe, 
+head,
+Data inspection: shape, info(), 
+describe(): numeric data mean, count, std, min, max, 1/2/3 Quartile, 
+df.isnull().sum()*100/df.shape[0]: Check missing value percentage, 
+subplots(rows, cols, figsize) boxplots tight_layout: Outliers checking, 
+Treat outliers(No need to be in project), 
+sns pairplot (scatter + hist), 
+categorical variable visualize boxplot (x = variable, y = target var),
