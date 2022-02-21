@@ -1,0 +1,191 @@
+#Q.1
+#I.
+#We can see that trees is a data frame with 31 rows and 3 columns. 
+
+trees[trees$Height > 82,]    # selects rows with Height greater than 82
+
+#Get the datatypes of Dataframe
+str(trees)
+
+#Get statistical summary of the dataset
+summary(trees)
+
+#II. 
+x<-seq(1, 5, length.out=4)
+
+#Using integer vector as index
+    x[c(2, 4)]
+
+#Using logical vector as index*
+#When we use a logical vector for indexing, the position where the logical vector is TRUE is returned.
+    x[c(TRUE, FALSE, FALSE, TRUE)]
+
+#Using character vector as index
+#This type of indexing is useful when dealing with named vectors. We can name each elements of a vector.
+y <- c("first"=3, "second"=0, "third"=9)
+y["first"]
+
+#Q.2
+#I.
+# Let's Analyse Students Performance in Exams
+#This data set consists of the marks secured by the students in various subjects.
+#To understand the influence of the parents background, test preparation etc on students performance
+
+performance <- read.csv('StudentsPerformance.csv')
+performance
+
+#Get dimesions of dataframe
+nrow(performance)
+ncol(performance)
+#Dataframe have 1000 rows and 8 features
+
+#Get Datatypes 
+str(performance)
+
+#Conclusion : Only three features are integer, rest are factor
+
+#Rename columns of dataframe
+namesOfColumns <- c("Gender","Race","Parent_Education","Lunch","Test_Prep","Math_Score","Reading_Score","Writing_Score")
+colnames(performance) <- namesOfColumns # renaming features
+colnames(performance)
+
+#Check summary statistics of dataframe
+summary(performance)
+
+#Obervation
+#1. There are more females than males
+#2. Group C has the largest number of members
+#3. some college and associates degree are the most frequently occuring #parental levels of education
+#4. most students have a standard lunch
+#5. most students have not completed the test prep course
+#6. the scores for math, reading and writing are on the same scale 0-100
+
+#II.
+#Create a function to remove outliears
+remove_outliers <- function(x, na.rm = TRUE, ...) {
+  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
+  H <- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+  y
+}
+performance_data <- cbind(performance[1:5] , apply(performance[6] , 2 , remove_outliers) ,apply(performance[7] , 2 , remove_outliers) ,apply(performance[8] , 2 , remove_outliers)  )
+performance_data
+sum(is.na(performance_data))
+
+#We have replaced outliers with Null values, now it’s time to remove #them
+performance_1 <- na.omit(performance_data)
+performance_1
+
+#Students By gender:
+# Import ggplot2 library
+library(ggplot2)
+Data <- performance_1
+plot1 <- 
+  ggplot() +
+  geom_bar(data = Data, aes(x = Gender), width = 0.2, fill = "green") +
+  geom_text(stat='count', data = Data, aes(x = Gender, label=..count..), vjust=-0.2) +
+  theme_bw() +
+  xlab("Gender") +
+  ylab("Number of Students") +
+  theme_classic() +
+  ggtitle("Number of Students by Gender") +
+  scale_fill_brewer(type = "qual", palette = 1, direction = 1,
+  aesthetics = "fill") +
+  ylim(0, 600)
+  
+plot1
+
+#There are more 510 female students and 478 male students.
+
+#Students By race:
+plot2 <- ggplot() +
+  geom_bar(data = Data, aes(x = Race), width = 0.6, fill = "green") +
+  geom_text(data = Data, aes(x = Race, label = ..count..), stat = "count", vjust = -0.2) +
+  theme_bw() +
+  xlab("Race/Ethnicity") +
+  ylab("Number of Students") +
+  theme(
+    text = element_text(family = "Tahoma")
+  ) +
+  theme_classic()+
+  scale_fill_brewer(type = "qual", palette = 1, direction = 1,
+  aesthetics = "fill") +
+  ggtitle("Number of Students by Race/Ethnicity")
+plot2
+#There are 316 students in group C, 261 students in group D while there are only 88 students in group A.
+
+#Plot scores by Gender to determine if there is a different score tendency for each gender
+# Math scores by Gender plot
+p <- ggplot(performance, aes(Math_Score)) + geom_histogram(binwidth=5, color="gray", aes(fill=Gender))
+p <- p + xlab("Math Scores") + ylab("Gender") + ggtitle("Math Scores by Gender")
+p
+
+# Boxplot of scores and Test Prep by Gender
+b <- ggplot(performance, aes(Gender, Writing_Score, color = Test_Prep))
+b <- b + geom_boxplot()
+b <- b + ggtitle("Writing scores by Gender Boxplot")
+b <- b + xlab("Gender") + ylab("Writing Scores")
+b
+
+# Reading scores by Gender plot
+p1 <- ggplot(performance, aes(Reading_Score)) + geom_histogram(binwidth=5, color="gray", aes(fill=Gender))
+p1 <- p1 + xlab("Reading Scores") + ylab("Gender") + ggtitle("Reading Scores by Gender")
+p1
+
+b1 <- ggplot(performance, aes(Gender, Math_Score, color = Test_Prep))
+b1 <- b1 + geom_boxplot()
+b1 <- b1 + ggtitle("Math scores by Gender Boxplot")
+b1 <- b1 + xlab("Gender") + ylab("Math Scores")
+b1
+
+# Writing scores by Gender plot
+p2 <- ggplot(performance, aes(Writing_Score)) +  geom_histogram(binwidth=5, color="gray", aes(fill=Gender))
+p2 <- p2 + xlab("Writing Scores") + ylab("Gender") + ggtitle("Writing Scores by Gender")
+p2
+
+b2 <- ggplot(performance, aes(Gender, Reading_Score, color = Test_Prep))
+b2 <- b2 + geom_boxplot()
+b2 <- b2 + ggtitle("Reading scores by Gender Boxplot")
+b2 <- b2 + xlab("Gender") + ylab("Reading Scores")
+b2
+
+#Conclusion :
+
+#1. students who completed the prep class had better scores in all three tests.
+#2. male students have received better scores in Math while female students in reading and writing.
+
+#Which gender does better in tests
+# To find out the result, we need to create a columns that stores average of score
+performance_2 <- performance_1
+performance_2$Total_score = performance_2$Math_Score +performance_2$Reading_Score +performance_2$Writing_Score
+performance_2$Avg_score = round((performance_2$Total_score)/3,0)
+performance_2
+
+#comparison of avg scores - male vs female
+ggplot(performance_2, aes( x= Avg_score, color = Gender))+ 
+  geom_density() + 
+  geom_vline( color = "red",linetype = "dashed", lwd =0.5  ,xintercept = mean(performance_2[performance_2$Gender == "female",]$Avg_score))+
+  geom_vline( color = "cyan",linetype = "dashed", lwd=0.5 ,  xintercept = mean(performance_2[performance_2$Gender == "male",]$Avg_score)) +
+  labs(title ="Distribution of scores by Gender", x ="Score", y = " Density")
+
+#From the above density plot, we see that scores of female students have a higher mean than male students.
+
+#Q.3
+#Reading tables from sql file
+#Importing relevant libraries to use SQL
+
+dbListTables(db)
+
+#Converting albums table
+albums <- dbReadTable(db,"albums")
+head(albums)
+
+#Converting artists table
+artists <- dbReadTable(db,"artists")
+head(artists)
+
+#Converting Customer table
+customers <- dbReadTable(db,"customers")
+head(customers)
