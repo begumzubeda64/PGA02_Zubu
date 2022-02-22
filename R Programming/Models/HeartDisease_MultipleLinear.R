@@ -26,4 +26,30 @@ plot(heart.disease.lm)   #Homoscedasticity, Residuals normally distributed
 par(mfrow=c(1, 1))
 
 #Visualize results
-plotting.data <- expand.grid(biking=seq(min(heart.data$biking), max(heart.data$biking)), smoking=seq(min(heart.data$smoking), max(heart.data$smoking)))
+#1.	Create a new dataframe with the information needed to plot the model
+plotting.data <- expand.grid(biking=seq(min(heart.data$biking), max(heart.data$biking), length.out=30), 
+                             smoking=c(min(heart.data$smoking), mean(heart.data$smoking), max(heart.data$smoking)))
+#2.	Predict the values of heart disease based on your linear model
+plotting.data$predicted.y <- predict.lm(heart.disease.lm, newdata = plotting.data)
+#3.	Round the smoking numbers to two decimals
+plotting.data$smoking <- round(plotting.data$smoking, digits = 2)
+#4.	Change the 'smoking' variable into a factor
+plotting.data$smoking <- as.factor(plotting.data$smoking)
+#5.	Plot the original data
+heart.plot <- ggplot(heart.data, aes(x=biking, y=heart.disease)) + geom_point()
+heart.plot
+#6.	Add the regression lines
+heart.plot <- heart.plot +
+  geom_line(data=plotting.data, aes(x=biking, y=predicted.y, color=smoking), size=1.25)
+heart.plot
+#7.	Make the graph ready for publication
+heart.plot <-
+  heart.plot +
+  theme_bw() +
+  labs(title = "Rates of heart disease (% of population) \n as a function of biking to work and smoking",
+       x = "Biking to work (% of population)",
+       y = "Heart disease (% of population)",
+       color = "Smoking \n (% of population)")
+heart.plot
+
+heart.plot + annotate(geom="text", x=30, y=1.75, label=" = 15 + (-0.2*biking) + (0.178*smoking)")
