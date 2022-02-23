@@ -12,7 +12,7 @@ dim(heart.data)
 summary(heart.data)
 
 #Assumptions
-cor(heart.data$biking, heart.data$smoking)   #autocorrelation
+cor(heart.data$biking, heart.data$smoking)   #independent predictors
 hist(heart.data$heart.disease)    #normally distributed
 plot(heart.disease ~ biking, data=heart.data)     #linearity x ~ y
 plot(heart.disease ~ smoking, data=heart.data)    #linearity x ~ y
