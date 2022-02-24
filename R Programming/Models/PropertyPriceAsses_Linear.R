@@ -58,7 +58,7 @@ plot(propertytrainData$Logprice, propertytrainData$Area)
 #Linear Regression Analysis
 reg_model <- lm(Logprice ~ ., data = propertytrainData[, -1])   # . refers to rest all variables
 summary(reg_model)
-#White Spaces - Highly significant, . - Average Significance(0.05-0.1), * - Significant(0.01-0.05), ** - Poorly Significant(0.001-0.01), *** - Not Significant(0-0.001) (in Coefficients)
+#White Spaces - Not significant, . - Poorly Significant(0.05-0.1), * - Average Significance(0.01-0.05), ** - Significant(0.001-0.01), *** - Highly Significant(0-0.001) (in Coefficients)
 
 #New models without Sea, Area
 reg_model1 <- lm(Logprice ~ Area+Days+Distance+Flood+Elevation+Sewer, data = propertytrainData[, -1])
