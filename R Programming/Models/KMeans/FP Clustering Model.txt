@@ -1,0 +1,556 @@
+#title: "Football analytics"
+
+data.csv includes lastest edition FIFA 2019 players attributes like : 
+
+1. Age
+2.  Nationality
+3.  Overall
+4.  Potential
+5.  Club
+6.  Value
+7.  Wage
+8.  Preferred Foot
+9.  International Reputation
+10.  Weak Foot
+11.  Skill Moves
+12.  Work Rate
+13.  Position
+14.  Jersey Number
+15.  Joined
+16.  Loaned From
+17.  Contract Valid Until
+18.  Height
+19.  Weight
+20.  LS
+21.  ST
+22.  RS
+23.  LW
+24.  LF
+25.  CF
+26.  RF
+27.  RW
+28.  LAM
+29.  CAM
+30.  RAM
+31.  LM
+32.  LCM
+33.  CM
+34.  RCM
+35.  RM
+36.  LWB
+37.  LDM
+38.  CDM
+39.  RDM
+40.  RWB
+41.  LB
+42.  LCB
+43.  CB
+44.  RCB
+45.  RB
+46.  Crossing
+47.  Finishing
+48.  Heading
+49.  Accuracy
+50.  ShortPassing
+51.  Volleys
+52.  Dribbling
+53.  Curve
+54.  FKAccuracy
+55.  LongPassing
+56.  BallControl
+57.  Acceleration
+58.  SprintSpeed
+59.  Agility
+60.  Reactions
+61.  Balance
+62.  ShotPower
+63.  Jumping
+64.  Stamina
+65.  Strength
+66.  LongShots
+67.  Aggression
+68.  Interceptions
+69.  Positioning
+70.  Vision
+71.  Penalties
+72.  Composure
+73.  Marking
+74.  StandingTackle
+75.  SlidingTackle
+76.  GKDiving
+77.  GKHandling
+78.  GKKicking
+79.  GKPositioning
+80.  GKReflexes
+81. Release Clause
+
+
+
+
+## Table of Content
+
+1. **[Import Packages](#import_packages)**
+2. **[Read Data](#Read_Data)**
+3. **[Data Preprocessing and EDA](#Data_Preprocessing)**
+    - 3.1 - [Data Types and Dimensions](#Data_Types_and_Dimensions)
+    - 3.2 - [Data Manipulation](#Data_Manipulation)
+    - 3.3 - [Dealing with Missing Values](#Dealing_with_Missing_Values)
+    - 3.4 - [Visualization](#Visualization)
+    - 3.5 - [Scale the Data](#Scale_the_data)
+4. **[PCA](#PCA)**
+5. **[Kmeans Clustering](#Kmeans_Clustering)**
+
+#### 1. Import Packages
+
+library(caret)
+library(broom)
+library(dplyr)
+library(dummy)
+library(ggplot2)
+library(ROCit)
+library(purrr)
+library(tidyverse) 
+library(magrittr)
+#library(DataExplorer)
+library(maps)
+library(plotly)
+library(DT)
+library(tidytext)
+library(gridExtra)
+#library(factoextra)
+
+#### 2. Read the Data
+raw_data <- read.csv("data.csv")
+head(raw_data)
+
+#### 3. Data Preprocessing
+
+#### 3. Data Types and Dimensions
+
+## Get the list of columns and its datatype
+str(raw_data)
+
+length(raw_data)
+
+nrow(raw_data)
+
+dim(raw_data)
+
+
+The dataset has 18207 observations and 89 variables.
+
+
+#### 3.2 Data Manipulation
+
+**Selecting required columns [Indexing]**
+
+df<-raw_data[,c(2:4,6,8,9,10,12,13,15:23,27,28,55:60,66:74,89)]
+
+
+###### 3.2.1 Create League Variable & Sampling
+
+
+df <- raw_data
+bundesliga <- c(
+  "1. FC Nürnberg", "1. FSV Mainz 05", "Bayer 04 Leverkusen", "FC Bayern München",
+  "Borussia Dortmund", "Borussia Mönchengladbach", "Eintracht Frankfurt",
+  "FC Augsburg", "FC Schalke 04", "Fortuna Düsseldorf", "Hannover 96",
+  "Hertha BSC", "RB Leipzig", "SC Freiburg", "TSG 1899 Hoffenheim",
+  "VfB Stuttgart", "VfL Wolfsburg", "SV Werder Bremen"
+)
+
+premierLeague <- c(
+  "Arsenal", "Bournemouth", "Brighton & Hove Albion", "Burnley",
+  "Cardiff City", "Chelsea", "Crystal Palace", "Everton", "Fulham",
+  "Huddersfield Town", "Leicester City", "Liverpool", "Manchester City",
+  "Manchester United", "Newcastle United", "Southampton", 
+  "Tottenham Hotspur", "Watford", "West Ham United", "Wolverhampton Wanderers"
+  
+)
+
+laliga <- c(
+  "Athletic Club de Bilbao", "Atlético Madrid", "CD Leganés",
+  "Deportivo Alavés", "FC Barcelona", "Getafe CF", "Girona FC", 
+  "Levante UD", "Rayo Vallecano", "RC Celta", "RCD Espanyol", 
+  "Real Betis", "Real Madrid", "Real Sociedad", "Real Valladolid CF",
+  "SD Eibar", "SD Huesca", "Sevilla FC", "Valencia CF", "Villarreal CF"
+)
+
+seriea <- c(
+  "Atalanta","Bologna","Cagliari","Chievo Verona","Empoli", "Fiorentina","Frosinone","Genoa",
+  "Inter","Juventus","Lazio","Milan","Napoli","Parma","Roma","Sampdoria","Sassuolo","SPAL",
+  "Torino","Udinese"
+  
+)
+
+superlig <- c(
+  "Akhisar Belediyespor","Alanyaspor", "Antalyaspor","Medipol Başakşehir FK","BB Erzurumspor","Beşiktaş JK",
+  "Bursaspor","Çaykur Rizespor","Fenerbahçe SK", "Galatasaray SK","Göztepe SK","Kasimpaşa SK",
+  "Kayserispor","Atiker Konyaspor","MKE Ankaragücü", "Sivasspor","Trabzonspor","Yeni Malatyaspor"
+)
+
+ligue1 <- c(
+  "Amiens SC", "Angers SCO", "AS Monaco", "AS Saint-Étienne", "Dijon FCO", "En Avant de Guingamp",
+  "FC Nantes", "FC Girondins de Bordeaux", "LOSC Lille", "Montpellier HSC", "Nîmes Olympique", 
+  "OGC Nice", "Olympique Lyonnais","Olympique de Marseille", "Paris Saint-Germain", 
+  "RC Strasbourg Alsace", "Stade Malherbe Caen", "Stade de Reims", "Stade Rennais FC", "Toulouse Football Club"
+)
+
+eredivisie <- c(
+  "ADO Den Haag","Ajax", "AZ Alkmaar", "De Graafschap","Excelsior","FC Emmen","FC Groningen",
+  "FC Utrecht", "Feyenoord","Fortuna Sittard", "Heracles Almelo","NAC Breda",
+  "PEC Zwolle", "PSV","SC Heerenveen","Vitesse","VVV-Venlo","Willem II"
+)
+
+liganos <- c(
+  "Os Belenenses", "Boavista FC", "CD Feirense", "CD Tondela", "CD Aves", "FC Porto",
+  "CD Nacional", "GD Chaves", "Clube Sport Marítimo", "Moreirense FC", "Portimonense SC", "Rio Ave FC",
+  "Santa Clara", "SC Braga", "SL Benfica", "Sporting CP", "Vitória Guimarães", "Vitória de Setúbal"
+)
+
+#In R programming, the mutate function is used to create a new variable from a data set.
+
+df %<>% mutate(
+    League = case_when(
+        Club %in% bundesliga ~ "Bundesliga",
+        Club %in% premierLeague ~ "Premier League",
+        Club %in% laliga ~ "La Liga",
+        Club %in% seriea ~ "Serie A",
+        Club %in% superlig ~ "Süper Lig",
+        Club %in% ligue1 ~ "Ligue 1",
+        Club %in% liganos ~ "Liga Nos",
+        Club %in% eredivisie ~ "Eredivisie"
+    ),
+    Country = case_when(
+        League == "Bundesliga" ~ "Germany",
+        League == "Premier League" ~ "UK",
+        League == "La Liga" ~ "Spain",
+        League == "Serie A" ~ "Italy",
+        League == "Süper Lig" ~ "Turkey",
+        League == "Ligue 1" ~ "France",
+        League == "Liga Nos" ~ "Portugal", 
+        League == "Eredivisie" ~ "Netherlands"
+    )
+) %>% filter(!is.na(League)) %>% mutate_if(is.factor, as.character)
+
+#The filter() function is used to subset a data frame, retaining all rows that satisfy your conditions. To be retained, the row must produce a value of TRUE for all conditions.
+
+rm(bundesliga, premierLeague, laliga, seriea, superlig, ligue1, eredivisie, liganos)
+
+#rm() function in R Language is used to delete objects from the memory.
+
+##### 3.2.2 String Manipulation
+
+Value and Wage variables has described as discrete variables. We should transform these guys as continuous variable.
+
+
+head(df$Value)
+
+# Player Value
+df$Values <- str_remove_all(df$Value,"€")
+df$Values <- str_replace_all(df$Values,"K", "000")
+df$Values <- str_remove_all(df$Values,"M")
+
+df$Values <- as.numeric(df$Values)
+
+# Player Wage
+df$Wages <- str_remove_all(df$Wage,"€")
+df$Wages <- str_replace_all(df$Wages,"K", "000")
+
+df$Wages <- as.numeric(df$Wages)
+
+data_1 <- df  %>% mutate(Values = if_else(df$Values < 1000 , Values * 1000000, Values))
+
+##### 3.2.3 Create Position Class
+<br>
+
+unique(data_1$Position)
+
+defence <- c("CB", "RB", "LB", "LWB", "RWB", "LCB", "RCB")
+midfielder <- c("CM", "CDM","CAM","LM","RM", "LAM", "RAM", "LCM", "RCM", "LDM", "RDM")
+
+data_2 <- data_1
+data_2 %<>% mutate(Class = if_else(Position %in% "GK", "Goal Keeper",
+                                 if_else(Position %in% defence, "Defender",
+                                         if_else(Position %in% midfielder, "Midfielder", "Forward"))))
+
+rm(defence, midfielder)
+
+##### 3.2.4 Height & Weight
+
+Height and Weight variables convert cm and kg units.
+
+data_3 <- data_2
+data_3 %<>%
+  mutate(Height = round((as.numeric(str_sub(Height, start=1,end = 1))*30.48) + (as.numeric(str_sub(Height, start = 3, end = 5))* 2.54)),
+         Weight = round(as.numeric(str_sub(Weight, start = 1, end = 3)) / 2.204623))
+head(data_3)
+#str_sub : It is used to extract and replace substrings from a character vector
+#start and end represents the starting and end position of the character
+
+##### 3.2.5 Correction of the Preferred Foot Variable
+
+data_4 <- data_3
+data_4 %<>% filter(Preferred.Foot %in% c("Left", "Right")) 
+data_4$Preferred.Foot <- as.factor(as.character(data_4$Preferred.Foot))
+unique(data_4$Preferred.Foot)
+
+##### 3.2.6 Rename Some Variables
+
+data_5 <- data_4
+data_5 %<>% 
+  rename(
+    "Heading.Accuracy"= HeadingAccuracy,
+    "Short.Passing"= ShortPassing,
+    "FK.Accuracy" = FKAccuracy,
+    "Long.Passing"= LongPassing,
+    "Ball.Control"= BallControl,
+    "Sprint.Speed"= SprintSpeed,
+    "Shot.Power"= ShotPower,
+    "Long.Shots"= LongShots,
+    "Standing.Tackle"= StandingTackle,
+    "Sliding.Tackle"= SlidingTackle,
+    "GK.Diving"= GKDiving,
+    "GK.Handling"= GKHandling,
+    "GK.Kicking"= GKKicking,
+    "GK.Positioning"= GKPositioning,
+    "GK.Reflexes"= GKReflexes
+  )
+
+##### 3.2.7. Remove Unnecessary Variables
+
+data_6 <- data_5
+data_6 %<>% select(-ID, -Body.Type, -Real.Face, -Joined, -Loaned.From, -Release.Clause, -Photo, -Flag, -Special, -Work.Rate)
+
+data_manipulated <- data_6
+
+
+#### 3.3 Dealing with Missing Values
+
+
+colSums(is.na(data_manipulated))
+
+
+**There are no missing values in the dataset**
+
+
+
+##### 3.4 Visualization
+
+###### 4.1.1 Distribution and the Average of The Players in each League
+
+summ <- data_manipulated %>% 
+  group_by(League) %>% 
+  summarise(age = mean(Age), .groups = 'drop')
+
+options(repr.plot.width = 12, repr.plot.height = 8)
+
+ggplot()+
+  geom_histogram(data_manipulated, mapping = aes(Age, fill = League),bins=10)+
+  geom_vline(summ, mapping = aes(xintercept = age), color = "red", size = 1.5)+
+  geom_text(summ, mapping = aes(x = age+3, y = 65, label = round(age,digits = 2)))+
+  facet_wrap(League~.)+
+  theme_minimal()+
+  theme(legend.position = "bottom")+
+  labs(y = "Frequency", title = "Distribution & The Average Age of The Players in each League", caption = "@EA Sports - FIFA 19")
+
+
+**From plot we can see distribution of players in each league**
+
+
+##### 4.1.2 Total Market Value in each League
+
+options(repr.plot.width = 12, repr.plot.height = 8)
+
+data_manipulated %>% 
+  group_by(League) %>% 
+  summarise(Total.Value = sum(as.numeric(Values), na.rm = TRUE),.groups = 'drop') %>% 
+  ggplot(aes(reorder(League, Total.Value), Total.Value, fill = Total.Value))+
+  geom_col(show.legend = FALSE)+
+  coord_flip()+
+  theme_minimal()+
+  labs(x = NULL, y = "Market Values of the Leagues")+
+  scale_fill_gradient(low = "khaki", high = "seagreen")+
+  theme(axis.line.y = element_line(colour = "darkslategray"),
+        axis.ticks.x = element_line(colour = "darkslategray"))+
+  scale_y_continuous(labels = c("0 €", "2 Billion €", "4 Billion €", "6 Billion €"))
+
+##### 4.1.3. Interactive World Map & Number of Player
+
+options(repr.plot.width = 12, repr.plot.height = 8)
+
+world_map <- map_data("world")
+
+numofplayers <- world_map %>% 
+  mutate(region = as.character(region)) %>% 
+  left_join((data_manipulated %>% mutate(Nationality = as.character(Nationality),
+                           Nationality = if_else(Nationality %in% "England", 
+                                                 "UK", Nationality)) %>%
+               #filter(League == "Bundesliga") %>%
+               count(Nationality, name = "Number of Player") %>%
+               rename(region = Nationality) %>%
+               mutate(region = as.character(region))), by = "region")
+
+
+ggplot(numofplayers, aes(long, lat, group = group))+
+    geom_polygon(aes(fill = `Number of Player` ), color = "white", show.legend = FALSE)+
+    scale_fill_viridis_c(option = "C")+
+    theme_void()+
+    labs(fill = "Number of Player",
+         title = "Number of Player in FIFA 19")
+
+
+
+##### 4.2.4. Comparison of the Two Players
+<br>
+
+# Selection of the players
+players <- data_manipulated %>% 
+  filter(Name %in% c("Cristiano Ronaldo", "L. Messi")) %>% 
+# Unite Name & Club variables
+  mutate(Name = paste0(Name, ", ", Club)) %>%
+# Selection abilities of the players
+  select(Name,Crossing:Sliding.Tackle) %>% 
+# Correction of the punctuation
+  rename_all(funs(gsub("[[:punct:]]", " ", .))) %>% 
+# Tranform from Variable to Observation
+  gather(Skill, Exp, Crossing:`Sliding Tackle`, -Name)
+head(players  )
+
+options(repr.plot.width = 15, repr.plot.height = 8)
+
+
+ggplot(players, aes(Skill, Exp, fill = Name))+
+  geom_col(show.legend = FALSE)+
+  coord_flip()+
+  facet_wrap(Name~.)+
+  scale_fill_manual(values = c("black", "navy"))+
+  theme_minimal()
+
+options(repr.plot.width = 15, repr.plot.height = 8)
+
+
+ggplot(players, aes(Skill, Exp, fill = Name))+
+  geom_col(position = "fill")+
+  coord_flip()+
+  scale_fill_manual(values = c("black", "red"))+
+  theme_minimal()+
+  geom_hline(yintercept = 0.5, color = "white", size = 1, linetype = 2)+
+  theme(legend.position = "top", axis.text.x=element_blank())+
+  labs(title = "Messi VS Ronaldo"
+       )
+
+
+##### 4.1.5. BMI - Body Mass Index
+
+  1. Below the Ideal Weight: < 18.49
+  2. Ideal Weight: 18.5 - 24.99
+  3. Over the Ideal Weight: 25 - 29.99
+  4. Much Over The Ideal Weight: > 30
+  
+unique(data_manipulated$Club)
+
+# Calculate BMI
+bmi <- data_manipulated %>% 
+  filter(Club == "FC Barcelona") %>%
+  mutate(BMI = round(Weight/(Height/100)^2, digits = 4))%>%
+  arrange(-BMI)%>%
+  select(Name, Age, Position, Class, Height, Weight, BMI)
+options(repr.plot.width = 12, repr.plot.height = 8)
+
+# Head & Tail Observations
+bmi2  <- rbind(
+  bmi %>% head(5) %>% mutate(BMI = BMI * -1),
+  bmi %>% tail(5)
+  ) %>% mutate(Type = if_else(BMI < 0, "Head", "Tail"))
+
+# BMI Visual
+bmi2 %>% 
+  ggplot(aes(fct_reorder(paste(Name,",", Position), desc(BMI)), BMI))+
+  geom_col(aes(fill = Type))+
+  geom_text(aes(y = c(rep(-2,5), rep(2,5)),label = round(abs(BMI),digits = 2)), 
+            color = "white", fontface = "bold", size = 4)+
+  coord_flip()+
+  theme_minimal()+
+  theme(axis.text.x = element_blank(),
+        legend.position = "top",
+        panel.background = element_rect(fill = "lightgray"),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(color = "slategray", face = "bold.italic",size = 12),
+        title = element_text(color = "slategray", face = "bold.italic",size = 20),
+        legend.box.background = element_rect(linetype = 2))+
+  labs(x = NULL, y = NULL, fill = NULL, title = "BMI Index")+
+  scale_fill_manual(values = c("steelblue", "khaki"))
+
+
+The above histogram shows that :
+
+a. "age" attribute is not symmetric.
+b. it is right-skewed(But this is totally fine as younger adult earn wages not the older ones)
+c. Minimum and Maximum age of the people is 17 and 90 respectively.
+d. This dataset has fewer observations(868) of people's age after certain age i.e. 70 years.
+
+#### 3.5 Scale the Data
+
+numeric_feature <- Filter(is.numeric, data_manipulated)
+data_standardized <- data.frame(scale(numeric_feature))
+data_standardized
+
+#### 4. PCA 
+data_pca <- prcomp(data_standardized,
+                 center = TRUE,
+                 scale. = TRUE)
+
+
+data_with_pca <- data.frame(as.matrix(data_standardized) %*% as.matrix(data_pca$rotation[,0:5]))
+data_with_pca
+
+# plot method
+
+summary(data_pca)
+
+**Selecting 5 principal components**
+
+data_final <- data_with_pca[,0:5]
+data_final
+
+
+
+#### 5. Kmeans Clustering
+
+**Using Random forest for feature selection**
+
+set.seed(109)
+# Initialize total within sum of squares error: wss
+wss <- 0
+# For 1 to 30 cluster centers
+for (j in 1:15) {
+  km.out <- kmeans(data_final, centers = j, nstart = 20)
+  # Save total within sum of squares to wss variable
+  wss[j] <- km.out$tot.withinss
+}
+
+
+# create a DF to use in a ggplot visualisation
+wss_df <- data.frame(num_cluster = 1:15, wgss = wss)
+
+# plot to determine optimal k
+ggplot(data = wss_df, aes(x=num_cluster, y= wgss)) + 
+  geom_line(color = "lightgrey", size = 2) + 
+  geom_point(color = "green", size = 4) +
+  theme_dark() +
+  geom_curve(x=15, xend=8, y=300000, yend= 290500, arrow = arrow(length = unit(0.2,"cm")), size =1, colour = "purple") 
+
+# Set k equal to the number of clusters corresponding to the elbow location
+k <- 4
+
+# Create a k-means model on wisc.data: wisc.km
+k_means <- kmeans(data_final, centers = k, nstart = 20)
+
+# add the cluster group back to the original DF for all players other than GK and Unknown
+cluster_data <- data_standardized %>%
+  mutate(Cluster = k_means$cluster)
+cluster_data
+
+
+**Conclusion : With the help of kmeans we clustered playes into 4 different categories**
