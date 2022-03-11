@@ -231,6 +231,7 @@ data_31$Churn <- data_3$Churn
 data_3 <- data_31
 data3 <- subset(data_3, select=-c(Churn))
 base_data <- data.frame(scale(data3))
+base_data$Churn <- data_3$Churn
 head(base_data)
 #Standardizing Data
 dmy <- dummyVars("~.", data=data_selected, fullRank=T)   #Fullrank means no deletion of cols when creating dummy
@@ -245,3 +246,132 @@ data_pca <- prcomp(data_pca_base, center=TRUE, scale=TRUE)
 data_with_pca <- data.frame(as.matrix(data_pca_base)%*%as.matrix(data_pca$rotation[, 0:5]))
 data_with_pca$Churn <- data_standardized$Churn
 head(data_with_pca)
+
+#Base Models
+dt <- sort(sample(nrow(base_data), nrow(base_data) * .8))
+train <- base_data[dt, ]
+test <- base_data[-dt, ]
+dim(train)
+dim(test)
+actual <- test$Churn
+#actual <- if_else(actual == 1, 0, 1)
+head(actual)
+table(train$Churn)
+#Logistic Regression
+lg_1 <- glm(factor(Churn) ~ ., data=train, family="binomial")
+summary(lg_1)
+#Make Predictions
+prediction_lg_1 <- predict(lg_1, data.frame(test))
+prediction_lg_1 <- if_else(prediction_lg_1 >= 0.5, 1, 0)
+prediction_lg_1
+#Performance Measure
+table(prediction_lg_1)
+factor(test$Churn)
+factor(prediction_lg_1)
+confusionMatrix(data=factor(prediction_lg_1), reference=factor(test$Churn), positive="1")
+accuracy_score_lg_1 <- accuracy(actual, prediction_lg_1)
+precision_score_lg_1 <- precision(actual, prediction_lg_1)
+accuracy_score_lg_1
+precision_score_lg_1 
+#ROC Curve
+library(plyr)
+ROCit_base <- rocit(score=prediction_lg_1, class=actual)
+plot(ROCit_base)
+recall_score_lg_1 <- recall(actual, prediction_lg_1)
+auc_score_lg_1 <- auc(actual, prediction_lg_1)
+Model <- c("Accuracy", "Precision", "Recall", "AUC Score")
+Logistic_Regression <- c(accuracy_score_lg_1 , precision_score_lg_1 ,recall_score_lg_1  , auc_score_lg_1)
+Base_Models = data.frame(Model,Logistic_Regression)
+Base_Models
+#Decision Tree
+library(rpart)
+library(rpart.plot)
+mtree_1 <- rpart(factor(Churn) ~ ., data=train, method="class", control=rpart.control(minsplit=20, minbucket=7, maxdepth=8, usesurrogate=2, xval=10))
+summary(mtree_1)
+#Make Predictions
+prediction_mtree_1 <- predict(mtree_1, data.frame(test), type="class")
+prediction_mtree_1
+#Performance Measure
+table(prediction_mtree_1)
+factor(test$Churn)
+factor(prediction_mtree_1)
+confusionMatrix(data=factor(prediction_mtree_1), reference=factor(test$Churn), positive="1")
+accuracy_score_mtree_1 <- accuracy(actual, prediction_mtree_1)
+precision_score_mtree_1 <- precision(actual, prediction_mtree_1)
+accuracy_score_mtree_1
+precision_score_mtree_1 
+#ROC Curve
+ROCit_base <- rocit(score=as.numeric(prediction_mtree_1), class=actual)
+plot(ROCit_base)
+recall_score_mtree_1 <- recall(actual, as.numeric(prediction_mtree_1))
+auc_score_mtree_1 <- auc(actual, prediction_mtree_1)
+Decision_Tree <- c(accuracy_score_mtree_1 , precision_score_mtree_1 ,recall_score_mtree_1  , auc_score_mtree_1)
+Base_Models$DecisionTree = data.frame(Decision_Tree)
+Base_Models
+#SVM
+library(e1071)
+#Linear
+svc_1 <- svm(formula=factor(Churn) ~ ., data=train, type="C-classification", kernel="linear")
+summary(svc_1)
+#Make Predictions
+prediction_svc_1 <- predict(svc_1, data.frame(test), type="class")
+prediction_svc_1
+#Performance Measure
+table(prediction_svc_1)
+factor(test$Churn)
+factor(prediction_svc_1)
+confusionMatrix(data=factor(prediction_svc_1), reference=factor(test$Churn), positive="1")
+accuracy_score_svc_1 <- accuracy(actual, prediction_svc_1)
+precision_score_svc_1 <- precision(actual, prediction_svc_1)
+accuracy_score_svc_1
+precision_score_svc_1 
+#ROC Curve
+ROCit_base <- rocit(score=as.numeric(prediction_svc_1), class=actual)
+plot(ROCit_base)
+recall_score_svc_1 <- recall(as.numeric(actual), as.numeric(prediction_svc_1))
+auc_score_svc_1 <- auc(actual, prediction_svc_1)
+SVM <- c(accuracy_score_svc_1 , precision_score_svc_1 ,recall_score_svc_1  , auc_score_svc_1)
+Base_Models$SVM = data.frame(SVM)
+Base_Models
+#KNN
+library(class)
+prediction_knn_1 <- knn(train, test, cl=train$Churn, k=13)
+prediction_knn_1
+#Performance Measure
+table(prediction_knn_1)
+factor(test$Churn)
+confusionMatrix(data=factor(prediction_knn_1), reference=factor(test$Churn), positive="1")
+accuracy_score_knn_1 <- accuracy(actual, prediction_knn_1)
+precision_score_knn_1 <- precision(actual, prediction_knn_1)
+accuracy_score_knn_1
+precision_score_knn_1 
+#ROC Curve
+ROCit_base <- rocit(score=as.numeric(prediction_knn_1), class=actual)
+plot(ROCit_base)
+recall_score_knn_1 <- recall(as.numeric(actual), as.numeric(prediction_knn_1))
+auc_score_knn_1 <- auc(actual, prediction_knn_1)
+KNN <- c(accuracy_score_knn_1 , precision_score_knn_1 ,recall_score_knn_1  , auc_score_knn_1)
+Base_Models$KNN = data.frame(KNN)
+Base_Models
+#Random Forest
+rf_1 = randomForest(x=train[-31], y=factor(train$Churn), ntree=500) 
+summary(rf_1)
+#Make Predictions
+prediction_rf_1 <- predict(rf_1, data.frame(test), type="class")
+prediction_rf_1
+#Performance Measure
+table(prediction_rf_1)
+factor(test$Churn)
+confusionMatrix(data=factor(prediction_rf_1), reference=factor(test$Churn), positive="1")
+accuracy_score_rf_1 <- accuracy(actual, prediction_rf_1)
+precision_score_rf_1 <- precision(actual, prediction_rf_1)
+accuracy_score_rf_1
+precision_score_rf_1 
+#ROC Curve
+ROCit_base <- rocit(score=as.numeric(prediction_rf_1), class=actual)
+plot(ROCit_base)
+recall_score_rf_1 <- recall(as.numeric(actual), as.numeric(prediction_rf_1))
+auc_score_rf_1 <- auc(actual, prediction_rf_1)
+Random_Forest <- c(accuracy_score_rf_1 , precision_score_rf_1 ,recall_score_rf_1  , auc_score_rf_1)
+Base_Models$RandomForest = data.frame(Random_Forest)
+Base_Models
