@@ -1,0 +1,88 @@
+create table airport (
+airport_id int,
+name string,
+city string,
+country string,
+iata string,
+icao string,
+latitude double,
+longitude double,
+altitude int,
+timezone double,
+dst string,
+tz string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+load data local inpath 'airports_mod.dat' into table airport;
+
+select * from airport;
+
+A. Find list of airports operating in the Country India.
+select * from airport where country='India';
+
+select * from airport where city='Mumbai';
+
+desc airport;
+
+create table airlines (
+airline_id int,
+name string,
+alias string,
+iata string,
+icao string,
+callsign string,
+country string,
+active string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+load data local inpath 'Final_airlines' into table airlines;
+
+show tables;
+select * from airlines;
+desc airlines;
+select * from airlines where country='India';
+
+create table routes (
+airline string,
+airline_id int,
+source string,
+source_id int,
+destination string,
+destination_id int,
+codeshare string,
+stops int,
+equipment string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+load data local inpath 'routes.dat' into table routes;
+show tables;
+
+desc routes;
+select * from routes;
+
+B. Find the list of Airlines having zero stops.
+select distinct routes.airline_id, routes.airline, airlines.name from routes 
+inner join airlines
+on routes.airline_id = airlines.airline_id
+where stops = 0;
+
+C. List of Airlines operating with code share.
+select distinct routes.airline_id, routes.airline, airlines.name from routes 
+inner join airlines
+on routes.airline_id = airlines.airline_id
+where routes.codeshare = 'Y';
+
+D. Which country(or territory) having highest airports.
+select country, count(*) as Count from airport 
+group by country 
+order by Count desc
+limit 1;
+
+E. Find the list of Active Airlines in United States.
+select airline_id, name from airlines where country='United States' and active='Y';
