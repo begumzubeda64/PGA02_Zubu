@@ -20,9 +20,9 @@ load data local inpath 'airports_mod.dat' into table airport;
 select * from airport;
 
 A. Find list of airports operating in the Country India.
-select * from airport where country='India';
+select * from airport where upper(trim(country))='INDIA';
 
-select * from airport where city='Mumbai';
+select * from airport where upper(trim(city))='Mumbai';
 
 desc airport;
 
@@ -44,7 +44,7 @@ load data local inpath 'Final_airlines' into table airlines;
 show tables;
 select * from airlines;
 desc airlines;
-select * from airlines where country='India';
+select * from airlines where upper(trim(country))='India';
 
 create table routes (
 airline string,
@@ -67,22 +67,30 @@ desc routes;
 select * from routes;
 
 B. Find the list of Airlines having zero stops.
-select distinct routes.airline_id, routes.airline, airlines.name from routes 
-inner join airlines
+select distinct routes.airline_id, routes.airline, airlines.name from airlines 
+join routes
 on routes.airline_id = airlines.airline_id
-where stops = 0;
+where routes.stops = 0;
 
 C. List of Airlines operating with code share.
-select distinct routes.airline_id, routes.airline, airlines.name from routes 
-inner join airlines
+select distinct routes.airline_id, routes.airline, airlines.name from airlines 
+join routes
 on routes.airline_id = airlines.airline_id
-where routes.codeshare = 'Y';
+where upper(trim(routes.codeshare)) = 'Y';
 
+where => filters raw data, having => filters aggregate data
 D. Which country(or territory) having highest airports.
-select country, count(*) as Count from airport 
-group by country 
-order by Count desc
-limit 1;
+select a.country, count(a.airport_id) as Count from airport a
+group by a.country having Count in (
+select max(total) from
+(select count(airport_id) as total from airport group by country) abc);
 
 E. Find the list of Active Airlines in United States.
-select airline_id, name from airlines where country='United States' and active='Y';
+select distinct a.airline_id, a.name from airlines a 
+join routes r
+on a.airline_id = r.airline_id
+join airport ar1
+on r.source_id = ar1.airport_id
+join airport ar2
+on r.destination_id = ar2.airport_id
+where trim(upper(ar1.country)) = 'UNITED STATES' or trim(upper(ar2.country)) = 'UNITED STATES';
