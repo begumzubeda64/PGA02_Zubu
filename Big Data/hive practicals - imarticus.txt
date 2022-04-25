@@ -158,6 +158,16 @@ select * from customer;
 
 describe extended customer;
 
+$ hadoop fs -mkdir /imart/sales
+$ hadoop fs -put txns1.txt imart/sales
+
+create external table txnrecords(txnno INT, txndate STRING, custno INT, amount DOUBLE, 
+category STRING, product STRING, city STRING, state STRING, spendby STRING)
+row format delimited
+fields terminated by ','
+stored as textfile
+location '/user/cloudera/imart/sales';
+
 
 K 1. Storing output in local file
 ------------------------------

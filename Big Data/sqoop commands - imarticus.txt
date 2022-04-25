@@ -1,0 +1,172 @@
+mysql -u root -p
+cloudera
+
+
+In Mysql
+show databases;
+use retail_db;
+show tables;
+
+hive:
+create table mycustomer(
+id int,
+fname string,
+lname string,
+email string,
+password string,
+street string,
+city string,
+state string,
+zipcode string)
+row format delimited
+fields terminated by','
+stored as textfile
+location '/user/cloudera/sqoop/customers';
+
+LIST DATABASES
+-------------
+sqoop list-databases --connect jdbc:mysql://127.0.0.1 --username root --password 'cloudera';
+
+
+sqoop list-databases --connect jdbc:mysql://127.0.0.1 --username root -P;
+
+
+
+
+LIST TABLES in a database
+--------------------------
+sqoop list-tables --connect jdbc:mysql://127.0.0.1/retail_db --username root --password 'cloudera';
+
+
+$hadoop fs -rmr sqoop;
+
+Import one table (with key)from mysql into HDFS
+------------------------------------------------
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --target-dir sqoop/customers;
+
+
+
+Add an extra record in mysql in retail_db
+INSERT INTO customers 
+     (customer_fname, customer_lname)
+     VALUES
+    ("Amit", "Kumar");
+
+Select * from customers;
+
+
+WITH INCREMENTAL
+
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --check-column customer_id --incremental append --last-value 12435 --target-dir sqoop/customers;
+
+#last id value in the hive is chosen, t6he record after that id will be imported using sqoop.  (12435)
+
+
+WITH WHERE CLAUSE
+----------------
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --where 'customer_lname="Smith"' --target-dir sqoop/query1 -m 1;
+
+#-m => num of mapper
+
+
+WITH COLUMN CLAUSE
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --columns "customer_id,customer_fname,customer_lname"  --target-dir sqoop/query2 -m 1;
+
+
+
+select * from customers where customer_lname='Smith';
+
+select * from customers c join orders o on c.customer_id=o.order_customer_id where o.order_status != "COMPLETE" ;
+
+22899 RECORDS
+
+
+
+
+WITH QUERY
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --query 'select order_id, order_date, order_customer_id, customer_fname, customer_lname, order_status from orders join customers on orders.order_customer_id = customers.customer_id where order_status != "COMPLETE" and $CONDITIONS '  --target-dir sqoop/query3 -m 1;
+
+
+
+
+Import all tables from mysql into hdfs      
+----------------------------------------------------
+sqoop import-all-tables --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --warehouse-dir sqoop/all_tables  -m 1; 
+
+
+Import data into hive managed tables
+
+
+
+sqoop import --connect  jdbc:mysql://localhost/retail_db --username  root --password 'cloudera' --table customers --hive-import --hive-table imarticus.customer_profile -m 1;
+
+sqoop import --connect  jdbc:mysql://localhost/retail_db --username  root --password 'cloudera' --table orders --hive-import --hive-table imarticus.orders -m 1;   #with no delimiter select any junk delimiter
+
+sqoop import --connect  jdbc:mysql://localhost/retail_db --username  root --password 'cloudera' --table customers --hive-import --hive-table imarticus.customer_profile2 --fields-terminated-by ',' -m 1;
+#select , delimiter
+
+
+use imarticus;
+desc customer_profile;
+select * from customer_profile;
+
+
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --query ' select * from customers c join orders o on c.customer_id=o.order_customer_id where o.order_status = "COMPLETE" AND $CONDITIONS ' --hive-import --hive-table sqoop_imp.query --target-dir itc/query20 -m 1;
+
+
+select * from query;
+
+22899
+
+
+where
+columns
+query
+
+
+
+
+sqoop export command
+--------------------
+gedit employee.txt
+
+1201,satish,delhi
+1202,krishna,mumbai
+1203,amith,pune
+1204,javed,chennai
+1205,prudvi,bangalore
+
+cat employee.txt
+
+hadoop fs -put employee.txt
+
+
+gedit emp1.txt
+1201,satish1,delhi
+1202,krishna1,mumbai
+1206,sanjay,pune
+1207,rajiv,chennai
+1208,vijay,bangalore
+
+cat emp1.txt
+
+hadoop fs -put emp1.txt 
+
+In MySQl
+use retail_db;
+
+CREATE TABLE emp_master(
+   employee_id INT NOT NULL AUTO_INCREMENT,
+   name VARCHAR(40) NOT NULL,
+   address VARCHAR(40) NOT NULL,
+   PRIMARY KEY ( employee_id ));
+
+
+sqoop export --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table emp_master --update-mode  allowinsert --update-key employee_id   --export-dir /user/cloudera/employee.txt --input-fields-terminated-by ',' ;
+
+
+
+sqoop export --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table emp_master --update-mode  allowinsert --update-key employee_id   --export-dir /user/cloudera/emp1.txt --input-fields-terminated-by ',' ;
+
+
+
