@@ -1,0 +1,38 @@
+dataRDD = sc.textFile("file:/home/cloudera/sample.txt")  #if file doesnt exists error will not occur in this step because data is only loaded when action is performed
+>>> dataRDD.count()
+
+mapRDD = dataRDD.map(lambda a : a.split(' '))
+mapRDD.collect()
+
+mapRDD = dataRDD.flatMap(lambda a : a.split(' '))  #flatten map
+
+mapRDD = dataRDD.flatMap(lambda a : a.encode("ascii", "ignore").split(' '))
+>>> for word in mapRDD.collect():
+...     print(word)
+... 
+
+
+>>> keybyword2 = mapRDD.map(lambda word : (word,1))
+>>> for line in keybyword2.collect():
+...     print(line)
+
+>>> counts = keybyword2.reduceByKey(lambda a,b : a+b).sortByKey()
+>>> for line in counts.collect():
+...     print(line)
+
+counts.saveAsTextFile("file:/home/cloudera/pyspark1")
+
+final_counts = counts.collect()
+sc.parallelize(final_counts,1).saveAsTextFile("file:/home/cloudera/pyspark2")
+
+sc.parallelize(final_counts,1).saveAsTextFile("hdfs://quickstart.cloudera:8020/user/cloudera/pyspark1")
+
+
+sortbyval = counts.sortBy(lambda a : -a[1]).collect()
+>>> for line in sortbyval:
+...     print(line)
+
+>>> counts.saveAsTextFile("file:/home/cloudera/pyspark3")
+>>> sc.parallelize(sortbyval,1).saveAsTextFile("file:/home/cloudera/pyspark3")
+
+

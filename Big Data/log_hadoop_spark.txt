@@ -1,0 +1,17 @@
+hadoop fs -put imart/mapred-hduser-historyserver-ubuntu.log
+
+lines = sc.textFile("hdfs://quickstart.cloudera/user/cloudera/imart/mapred-hduser-historyserver-ubuntu.log")
+lines.count()
+
+lines_lower = lines.map(lambda s: s.encode("ascii", "ignore").lower())
+lines_lower.count()
+
+errors = lines_lower.filter(lambda s : "error" in s)
+errors.count()
+>>> for line in errors.collect():
+...     print(line)
+
+pattern = errors.filter(lambda s: "received signal 15" in s)
+pattern.count()
+>>> for line in pattern.collect():
+...     print(line)
